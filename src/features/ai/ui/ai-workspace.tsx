@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ConversationList } from "@/features/ai/ui/conversation-list";
 import { ModelManagerDialog } from "@/features/ai/ui/model-manager-dialog";
 import type { ConversationSummary, ModelInfo, ProviderId } from "@/features/ai/types";
 
@@ -88,6 +87,7 @@ export function AiWorkspace() {
   const [statusText, setStatusText] = useState("Ready");
   const [busy, setBusy] = useState(false);
   const [isModelDialogOpen, setIsModelDialogOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const activeConversation = useMemo(
     () => conversations.find((item) => item.id === activeId) ?? null,
@@ -342,98 +342,307 @@ export function AiWorkspace() {
     }
   };
 
+  const openConversation = (conversationId: string) => {
+    setActiveId(conversationId);
+    setIsSidebarOpen(false);
+  };
+
+  const createFromSidebar = async () => {
+    await createConversation();
+    setIsSidebarOpen(false);
+  };
+
   return (
-    <main className="mx-auto min-h-[100dvh] w-full max-w-[1500px] px-4 py-4 md:px-6">
-      <div className="mb-3 flex items-center justify-between rounded-xl border border-[#1b2128] bg-[#0b0f14] px-4 py-3">
-        <div>
-          <p className="text-sm uppercase tracking-[0.16em] text-[#97a0ab]">name.com/ai</p>
-          <h1 className="text-lg font-medium">Personal AI Command Layer</h1>
-        </div>
-        <p className="text-xs text-[#97a0ab]">Single-user local-first</p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-[280px_1fr]">
-        <ConversationList
-          activeId={activeId}
-          items={conversations}
-          onCreate={createConversation}
-          onDelete={deleteConversation}
-          onRename={renameConversation}
-          onSelect={setActiveId}
+    <main className="relative min-h-[100dvh] bg-[var(--bg)] text-[var(--text)]">
+      {isSidebarOpen ? (
+        <button
+          aria-label="Close navigation"
+          className="fixed inset-0 z-20 bg-black/50 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+          type="button"
         />
+      ) : null}
 
-        <section className="surface flex min-h-[72dvh] flex-col rounded-xl p-3">
-          <div className="mb-2 flex-1 space-y-3 overflow-y-auto rounded-lg border border-[#232a32] bg-[#0b1016] p-3">
-            {messages.length === 0 ? (
-              <p className="text-sm text-[#97a0ab]">
-                Start a conversation. Pick an installed model from the composer, or use Search models to download one.
-              </p>
-            ) : (
-              messages.map((message) => (
-                <article
-                  className={`max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-6 ${
-                    message.role === "user"
-                      ? "ml-auto bg-[#1a73e8] text-white"
-                      : "mr-auto border border-[#2a313a] bg-[#131921]"
-                  }`}
-                  key={message.id}
-                >
-                  {message.content || "..."}
-                </article>
-              ))
-            )}
+      <div className="mx-auto grid min-h-[100dvh] w-full max-w-[1919px] md:grid-cols-[236px_1fr]">
+        <aside
+          className={`fixed inset-y-0 left-0 z-30 w-[236px] border-r border-[var(--line)] bg-[var(--rail)] px-2 pb-2 pt-3 transition-transform duration-200 md:static md:translate-x-0 ${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="mb-2 flex items-center justify-between px-2">
+            <h1 className="text-[30px] font-medium leading-none tracking-tight text-[#f2f3f6] [font-family:Georgia,'Times_New_Roman',serif]">
+              OmniApp
+            </h1>
+            <button
+              aria-label="Collapse sidebar"
+              className="hidden h-7 w-7 rounded-md border border-[var(--line)] text-xs text-[var(--text-muted)] md:inline-flex md:items-center md:justify-center"
+              disabled
+              type="button"
+            >
+              []
+            </button>
           </div>
 
-          <div className="mt-3 rounded-3xl border border-[#2a313a] bg-[#121820] px-3 py-2">
-            <div className="mb-2 flex flex-wrap items-center gap-2 border-b border-[#232a32] pb-2">
-              <select
-                className="rounded-md border border-[#2a2f36] bg-[#11141a] px-2 py-1 text-xs"
-                onChange={(event) => {
-                  const nextTag = event.target.value;
-                  if (!nextTag) {
-                    void clearModel();
-                    return;
-                  }
-                  void pickModel(nextTag);
-                }}
-                value={currentModel}
-              >
-                <option value="">Auto select model</option>
-                {installed.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.id}
-                  </option>
-                ))}
-              </select>
-              <button
-                className="rounded-md border border-[#2a2f36] bg-[#11141a] px-2 py-1 text-xs hover:bg-[#181c24]"
-                onClick={() => setIsModelDialogOpen(true)}
-                type="button"
-              >
-                Search models
-              </button>
-              <p className="text-xs text-[#97a0ab]">{currentModel ? `Current: ${currentModel}` : "Using auto model resolution."}</p>
-            </div>
+          <div className="space-y-0.5 px-1">
+            <button
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
+              onClick={() => void createFromSidebar()}
+              type="button"
+            >
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-[var(--line)] text-xs">+</span>
+              <span>New chat</span>
+            </button>
+            <button
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
+              disabled
+              type="button"
+            >
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-[var(--line)] text-[10px]">C</span>
+              <span>Chats</span>
+            </button>
+            <button
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
+              disabled
+              type="button"
+            >
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-[var(--line)] text-[10px]">P</span>
+              <span>Projects</span>
+            </button>
+            <button
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
+              disabled
+              type="button"
+            >
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-[var(--line)] text-[10px]">A</span>
+              <span>Artifacts</span>
+            </button>
+            <button
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
+              disabled
+              type="button"
+            >
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-[var(--line)] text-[10px]">U</span>
+              <span>Customize</span>
+            </button>
+          </div>
 
-            <div className="flex items-end gap-2">
-              <textarea
-                className="max-h-36 min-h-[44px] flex-1 resize-y bg-transparent px-2 py-2 text-sm outline-none"
-                onChange={(event) => setInput(event.target.value)}
-                placeholder="Send a prompt..."
-                value={input}
-              />
+          <div className="mt-3 px-2">
+            <p className="text-xs text-[var(--text-muted)]">Products</p>
+            <div className="mt-1 space-y-0.5">
               <button
-                className="rounded-full bg-[#1a73e8] px-4 py-2 text-xs font-medium text-white disabled:cursor-not-allowed disabled:bg-[#33445e]"
-                disabled={busy || !activeConversation}
-                onClick={send}
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
+                disabled
                 type="button"
               >
-                {busy ? "Streaming..." : "Send"}
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-[var(--line)] text-[10px]">W</span>
+                <span>Cowork</span>
+              </button>
+              <button
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
+                disabled
+                type="button"
+              >
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-[var(--line)] text-[10px]">{`</>`}</span>
+                <span>Code</span>
               </button>
             </div>
           </div>
 
-          <p className="mt-2 text-xs text-[#97a0ab]">{statusText}</p>
+          <div className="mt-3 min-h-0 border-t border-[var(--line)] px-2 pt-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs text-[var(--text-muted)]">Recents</p>
+              <button
+                className="rounded-md px-1 text-xs text-[var(--text-muted)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
+                onClick={() => void loadConversations()}
+                type="button"
+              >
+                Refresh
+              </button>
+            </div>
+            <div className="max-h-[calc(100dvh-365px)] space-y-1 overflow-y-auto pr-1">
+              {conversations.length === 0 ? <p className="px-1 text-xs text-[var(--text-muted)]">No conversations yet.</p> : null}
+              {conversations.map((item) => {
+                const isActive = item.id === activeId;
+                return (
+                  <div
+                    className={`group rounded-lg border px-2 py-2 ${
+                      isActive ? "border-[var(--line-strong)] bg-[var(--panel-strong)]" : "border-transparent hover:bg-[var(--panel)]"
+                    }`}
+                    key={item.id}
+                  >
+                    <button className="w-full text-left" onClick={() => openConversation(item.id)} title={item.title} type="button">
+                      <p className="truncate text-sm text-[var(--text)]">{item.title}</p>
+                      <p className="truncate text-[11px] text-[var(--text-muted)]">{item.provider}</p>
+                    </button>
+                    <div className="mt-1 hidden gap-1 group-hover:flex">
+                      <button
+                        className="rounded-md border border-[var(--line)] px-1.5 py-0.5 text-[10px] text-[var(--text-muted)] hover:text-[var(--text)]"
+                        onClick={() => void renameConversation(item)}
+                        type="button"
+                      >
+                        Rename
+                      </button>
+                      <button
+                        className="rounded-md border border-[var(--line)] px-1.5 py-0.5 text-[10px] text-[var(--text-muted)] hover:text-[var(--text)]"
+                        onClick={() => void deleteConversation(item)}
+                        type="button"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="absolute inset-x-0 bottom-0 border-t border-[var(--line)] bg-[var(--rail)] px-2 py-2">
+            <div className="flex items-center justify-between rounded-xl px-1 py-1">
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#d1cec3] text-xs font-semibold text-[#222]">
+                  JS
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-[var(--text)]">john skibidi</p>
+                  <p className="truncate text-xs text-[var(--text-muted)]">Free plan</p>
+                </div>
+              </div>
+              <button className="h-7 w-7 rounded-md border border-[var(--line)] text-[var(--text-muted)]" disabled type="button">
+                v
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <section className="relative flex min-h-[100dvh] flex-col bg-[var(--bg)] px-4 py-4 md:px-8">
+          <div className="mb-2 flex items-center justify-between">
+            <button
+              aria-label="Open navigation"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--line)] text-sm text-[var(--text-muted)] md:hidden"
+              onClick={() => setIsSidebarOpen(true)}
+              type="button"
+            >
+              =
+            </button>
+            <div className="mx-auto rounded-lg border border-[var(--line)] bg-[var(--panel)] px-3 py-1 text-xs text-[var(--text-muted)]">
+              Free plan · Upgrade
+            </div>
+            <button
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--line)] text-xs text-[var(--text-muted)]"
+              disabled
+              type="button"
+            >
+              O
+            </button>
+          </div>
+
+          <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col">
+            <div className={`${messages.length === 0 ? "flex-1" : ""} flex flex-col justify-end pb-4 pt-10`}>
+              {messages.length > 0 ? (
+                <div className="mb-6 max-h-[48dvh] space-y-3 overflow-y-auto pr-1">
+                  {messages.map((message) => (
+                    <article
+                      className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-6 ${
+                        message.role === "user"
+                          ? "ml-auto bg-[var(--accent)] text-white"
+                          : "mr-auto border border-[var(--line)] bg-[var(--panel)] text-[var(--text)]"
+                      }`}
+                      key={message.id}
+                    >
+                      {message.content || "..."}
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="mb-7 text-center">
+                  <h2 className="text-[49px] font-medium leading-[1.1] text-[#cfccc2] [font-family:Georgia,'Times_New_Roman',serif]">
+                    <span className="mr-3 align-middle text-[34px] text-[#dc7d4f]">*</span>
+                    <span className="align-middle">how can omniapp help?</span>
+                  </h2>
+                </div>
+              )}
+
+              <div className="mx-auto w-full max-w-[780px]">
+                <div className="rounded-[20px] border border-[var(--line)] bg-[var(--composer)] px-4 pb-3 pt-4 shadow-[0_12px_30px_rgba(0,0,0,0.35)]">
+                  <textarea
+                    className="min-h-[80px] w-full resize-none bg-transparent text-[28px] leading-[1.25] text-[var(--text)] outline-none placeholder:text-[#858071] md:text-[33px]"
+                    onChange={(event) => setInput(event.target.value)}
+                    placeholder="How can I help you today?"
+                    value={input}
+                  />
+
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--line)] pt-2">
+                    <button
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line)] text-lg text-[var(--text-muted)] hover:text-[var(--text)]"
+                      disabled
+                      type="button"
+                    >
+                      +
+                    </button>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <select
+                        className="h-8 rounded-md border border-[var(--line)] bg-[var(--panel)] px-2 text-xs text-[var(--text-muted)]"
+                        onChange={(event) => {
+                          const nextTag = event.target.value;
+                          if (!nextTag) {
+                            void clearModel();
+                            return;
+                          }
+                          void pickModel(nextTag);
+                        }}
+                        value={currentModel}
+                      >
+                        <option value="">Auto model</option>
+                        {installed.map((model) => (
+                          <option key={model.id} value={model.id}>
+                            {model.id}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        className="h-8 rounded-md border border-[var(--line)] bg-[var(--panel)] px-2 text-xs text-[var(--text-muted)] hover:text-[var(--text)]"
+                        onClick={() => setIsModelDialogOpen(true)}
+                        type="button"
+                      >
+                        Manage
+                      </button>
+                      <button
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--line)] text-xs text-[var(--text-muted)]"
+                        disabled
+                        type="button"
+                      >
+                        Mic
+                      </button>
+                      <button
+                        className="inline-flex h-8 items-center justify-center rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 text-xs font-medium text-[var(--text)] transition hover:bg-[var(--panel-strong)] disabled:cursor-not-allowed disabled:opacity-45"
+                        disabled={busy || !activeConversation}
+                        onClick={() => void send()}
+                        type="button"
+                      >
+                        {busy ? "Streaming..." : "Send"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  {["Code", "Learn", "Write", "Life stuff", "OmniApp's choice"].map((chip) => (
+                    <button
+                      className="rounded-lg border border-[var(--line)] bg-[var(--chip)] px-3 py-1 text-sm text-[var(--text-soft)] transition hover:text-[var(--text)]"
+                      disabled
+                      key={chip}
+                      type="button"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+
+                <p className="mt-3 text-center text-xs text-[var(--text-muted)]">{statusText}</p>
+              </div>
+            </div>
+          </div>
         </section>
       </div>
 

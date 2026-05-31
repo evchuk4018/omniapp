@@ -1,13 +1,18 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 :root {
-  --bg: #050607;
-  --panel: #0d0f12;
-  --panel-strong: #13161a;
-  --line: #1d2228;
-  --text: #f5f7fa;
-  --text-muted: #97a0ab;
-  --accent: #1a73e8;
+  --bg: #1a1a1a;
+  --rail: #171717;
+  --panel: #1f1f1f;
+  --panel-strong: #252525;
+  --composer: #2a2a2a;
+  --chip: #2d2d2d;
+  --line: #323232;
+  --line-strong: #454545;
+  --text: #e7e3d9;
+  --text-soft: #d4d0c7;
+  --text-muted: #9c988e;
+  --accent: #d67a4c;
   --success: #10a37f;
 }
 
@@ -19,7 +24,7 @@ html,
 body {
   margin: 0;
   min-height: 100dvh;
-  background: radial-gradient(circle at 15% -15%, #172031 0%, var(--bg) 45%);
+  background: var(--bg);
   color: var(--text);
   font-family: "Geist", "Segoe UI", sans-serif;
 }
@@ -37,7 +42,12 @@ textarea {
   color: inherit;
 }
 
+textarea::placeholder,
+input::placeholder {
+  color: var(--text-muted);
+}
+
 .surface {
-  background: linear-gradient(180deg, rgba(19, 22, 26, 0.94), rgba(13, 15, 18, 0.94));
+  background: var(--panel);
   border: 1px solid var(--line);
 }
