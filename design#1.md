@@ -6,7 +6,7 @@
 - Layout intent: three-column command layer.
   - Left: conversation rail.
   - Center: chat stream and prompt composer.
-  - Right: model control and download/search.
+  - Model controls are composer-first (dropdown + popup), not a persistent right panel.
 
 ## 2. Token Lock (No Alternatives)
 - Background: `#050607`
@@ -31,8 +31,8 @@
 ## 4. Route-Level Layout
 - `/`: app shell entry with one primary CTA to `/ai`.
 - `/ai`: responsive three-column grid.
-  - Desktop: `280px / fluid / 300px`.
-  - Mobile/tablet: vertical stack with conversation list first, chat second, models third.
+  - Desktop: `280px / fluid`.
+  - Mobile/tablet: vertical stack with conversation list first, chat second.
 
 ## 5. Component Contracts
 
@@ -52,12 +52,12 @@
 - Prompt composer at bottom with multiline input and send button.
 - Streaming state shows send button text as `Streaming...`.
 
-### 5.3 Model Control Panel
-- Provider selector (Ollama or OpenAI-compatible local).
-- Installed model list with one-click `Use` behavior.
-- Search list for discoverable models.
-- Download action for not-installed Ollama models.
-- Persist default model action.
+### 5.3 Model Control
+- Composer dropdown for installed models.
+- `Search models` action opens popup dialog.
+- Popup includes provider selector (Ollama or OpenAI-compatible local).
+- Popup includes discoverable model search and download for not-installed Ollama models.
+- Popup includes explicit persist-default action.
 
 ## 6. UX Rules (Inferred)
 - If no installed model exists and user tries to send, block and show: `Download a model first, then send your prompt.`
@@ -82,6 +82,6 @@
 - `/` route works as home shell.
 - `/ai` route provides chat feature.
 - User can create/manage conversations.
-- User can select/search/download/switch models.
+- User can select/search/download/switch models from composer dropdown + popup.
 - User can chat with selected local runtime model.
 - History persists locally via SQLite.

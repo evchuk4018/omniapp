@@ -98,12 +98,22 @@ export class OpenAiCompatibleLocalProvider implements AiProvider {
             continue;
           }
           const payload = line.slice(5).trim();
+          if (!payload) {
+            continue;
+          }
           if (payload === "[DONE]") {
             return;
           }
-          const json = JSON.parse(payload) as {
+          let json: {
             choices?: Array<{ delta?: { content?: string } }>;
-          };
+          } | null = null;
+          try {
+            json = JSON.parse(payload) as {
+              choices?: Array<{ delta?: { content?: string } }>;
+            };
+          } catch {
+            continue;
+          }
           const token = json.choices?.[0]?.delta?.content;
           if (token) {
             input.callbacks.onToken(token);

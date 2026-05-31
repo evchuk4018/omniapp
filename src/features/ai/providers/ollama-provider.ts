@@ -174,7 +174,12 @@ export class OllamaProvider implements AiProvider {
         if (!trimmed) {
           continue;
         }
-        const item = JSON.parse(trimmed) as OllamaStreamLine;
+        let item: OllamaStreamLine | null = null;
+        try {
+          item = JSON.parse(trimmed) as OllamaStreamLine;
+        } catch {
+          continue;
+        }
         const token = item.message?.content;
         if (token) {
           input.callbacks.onToken(token);

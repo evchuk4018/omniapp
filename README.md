@@ -43,8 +43,8 @@ pnpm dev
 - Conversation list with create/rename/delete.
 - Local message history per conversation.
 - Provider abstraction for local runtimes.
-- Installed model selector and default model persistence.
-- Model search and download flow (Ollama).
+- Composer model dropdown for installed models.
+- Model manager popup for provider switching, search/download, and default model persistence.
 - Streaming chat responses in UI.
 
 ## Folder Notes
